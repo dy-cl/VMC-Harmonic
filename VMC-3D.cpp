@@ -6,12 +6,14 @@
 
 // PDF
 double pdf(double r, double a) {
-    return std::exp(-2 * a * std::pow(r, 2));
+    //return std::exp(-2 * a * std::pow(r, 2)); //PDF for 3D Harmonic oscillator
+    return std::exp(-2*a*r);  //PDF for hydrogen atom
 }
 
 // Local Energy
 double EL(double a, double r) {
     //return 3*a + (0.5 - 2*std::pow(a, 2)) * std::pow(r, 2); //Local energy for 3D harmonic oscillator
+    return -(1/r) - (1/2)*a*(a - (2/r)); //Local energy for hydrogen atom
 }
 
 std::vector<double> thermalise(double a, double h, int Nthermalsteps) {
@@ -44,12 +46,12 @@ std::vector<double> thermalise(double a, double h, int Nthermalsteps) {
         //Adaptive step size
         h *= (accepted_moves / static_cast<double>(i + 1) > 0.5) ? 1.005 : 0.995;
     }
-    return {xi, yi, zi}; // Return thermalised position
+    return {xi, yi, zi}; //Return thermalised position
 }
 
 std::vector<double> gen_samples(double a, double xi, double yi, double zi, double h, int Nsteps) {
     
-    std::srand(std::time(0)); // Seed RNG
+    std::srand(std::time(0)); //Seed RNG
     std::vector<double> samples;
     int accepted_moves = 0;
 
@@ -98,11 +100,12 @@ int main() {
     int num_walkers = 400; //Number of walkers
 
     std::vector<std::vector<double>> starting_pos(num_walkers); //Starting positions in xyz obtained from thermalisation
-    std::vector<std::vector<std::vector<double>>> samples(num_walkers);
+    std::vector<std::vector<std::vector<double>>> samples(num_walkers); //Positions visited by walkers stored here
     std::vector<std::vector<double>> ET(num_walkers, std::vector<double>(points, 0.0));
 
     for (int w = 0; w < num_walkers; ++w) {
         for (int i = 0; i < points; ++i) {
+
             //Thermalize
             std::vector<double> thermalized_pos = thermalise(alpha[i], h, Nthermalsteps);
             starting_pos[w].insert(starting_pos[w].end(), thermalized_pos.begin(), thermalized_pos.end());
@@ -132,7 +135,7 @@ int main() {
         average_ET[i] /= num_walkers;
     }
 
-    // Output results
+    //Output results
     for (int i = 0; i < points; ++i) {
         std::cout << "a: " << alpha[i] << ", Average ET: " << average_ET[i] << std::endl;
     }
